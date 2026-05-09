@@ -1,35 +1,35 @@
 name: Deploy to AWS EC2
 
 on:
-push:
-branches:
-- deploy
+  push:
+    branches:
+    - deploy
 
 jobs:
-deploy:
-runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-  - name: Login to DockerHub
-    run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-  - name: Build Docker image
-    run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/front_eval2:latest .
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/front_eval2:latest .
 
-  - name: Push Docker image
-    run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/front_eval2:latest
+      - name: Push Docker image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/front_eval2:latest
 
-  - name: Deploy to EC2
-    uses: appleboy/ssh-action@v0.1.10
-    with:
-      host: ${{ secrets.EC2_HOST }}
-      username: ${{ secrets.EC2_USER }}
-      key: ${{ secrets.EC2_SSH_KEY }}
-      script: |
-        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/front_eval2:latest
-        docker stop frontend || true
-        docker rm frontend || true
-        docker run -d -p 80:5000 --env-file .env --name frontend ${{ secrets.DOCKERHUB_USERNAME }}/front_eval2:latest
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/front_eval2:latest
+            docker stop frontend || true
+            docker rm frontend || true
+            docker run -d -p 80:5000 --env-file .env --name frontend ${{ secrets.DOCKERHUB_USERNAME }}/front_eval2:latest
